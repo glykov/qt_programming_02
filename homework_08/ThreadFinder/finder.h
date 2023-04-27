@@ -2,18 +2,29 @@
 #define FINDER_H
 
 #include <QObject>
+#include <QThread>
 
-class Finder : public QObject
+class Finder : public QThread
 {
     Q_OBJECT
 public:
-    explicit Finder(QObject *parent = nullptr);
+    explicit Finder(QString dir, QString file, QObject *parent = nullptr);
+    void stopSearch() {
+        working = false;
+    }
+
+protected:
+    void run() override;
 
 signals:
     void nextFound(QString);
+    void writeFoundPath(QString);
+    void threadStopped();
 
-public slots:
-    void find(QString, QString);
+private:
+    QString dir;
+    QString file;
+    bool working;
 
 };
 

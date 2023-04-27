@@ -3,15 +3,15 @@
 #include <QPushButton>
 #include <QGridLayout>
 #include <QFileDialog>
+#include <QThread>
 #include "mainwindow.h"
+#include "finder.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QWidget(parent)
 {
-    finder = new Finder();
-
     startingDir = new QLineEdit(qApp->applicationDirPath());
-    fileToFind = new QLineEdit("*");
+    fileToFind = new QLineEdit("");
     resultText = new QTextEdit;
 
     QLabel *dirLabel = new QLabel("Начальная папка для поиска");
@@ -23,8 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *findButton = new QPushButton("Начать поиск");
 
     connect(dirButton, SIGNAL(clicked()), this, SLOT(browseDirs()));
-    connect(findButton, SIGNAL(clicked()), this, SLOT(doFind()));
-    connect(finder, SIGNAL(nextFound(QString)), resultText, SLOT(append(QString)));
+    connect(findButton, SIGNAL(clicked()), this, SLOT(findFile()));
 
     QGridLayout *layout = new QGridLayout;
     layout->setContentsMargins(5, 5, 5, 5);
@@ -40,6 +39,11 @@ MainWindow::MainWindow(QWidget *parent)
     // filling row 2
     layout->addWidget(resultText, 2, 0, 1, 3);
     setLayout(layout);
+
+    controller = new Controller();
+    connect(controller, SIGNAL(genPathOfFile(QString)),
+            this, SLOT(printFoundFile(QString)));
+    connect(controller, SIGNAL(newSearch()), resultText, SLOT(clear()));
 
 }
 
@@ -57,8 +61,19 @@ void MainWindow::browseDirs()
     }
 }
 
-void MainWindow::doFind()
+void MainWindow::findFile()
 {
-
+    QString file = fileToFind->text();
+    QString dir = startingDir->text();
+    if (file.length() == 0 || dir.length() == 0) {
+        return;
+    }
+    controller->startSearch(dir, file);
 }
+
+void MainWindow::printFoundFile(QString str)
+{
+    resultText->append(str);
+}
+
 
